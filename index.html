@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>EDCELLTECH - CFTV PPE Safety Analytics</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="system-header">
+            <div class="logo-area">
+                <span class="pulse-icon" id="system-pulse"></span>
+                <h1>CFTV VISION <span class="accent">SAFETY PPE</span></h1>
+            </div>
+            <div class="system-time" id="live-clock">00:00:00</div>
+        </header>
+
+        <main class="main-content">
+            <section class="video-workspace" id="video-workspace">
+                <div class="video-wrapper" id="video-wrapper-element">
+                    <video id="webcam" autoplay playsinline muted></video>
+                    <canvas id="analytics-canvas"></canvas>
+                    
+                    <div class="cam-overlay-info">
+                        <div class="cam-id">CAM_PPE // SEGURANÇA DO TRABALHO</div>
+                        <div class="cam-fps" id="fps-counter">FPS: 00</div>
+                    </div>
+
+                    <div class="violation-alert-banner" id="violation-banner">
+    ALERTA: ÓCULOS DE SEGURANÇA NÃO DETECTADO
+</div>
+
+                    <div class="processing-overlay" id="processing-overlay">
+                        <div class="spinner"></div>
+                        <span>ANALISANDO...</span>
+                    </div>
+                </div>
+
+                <div class="camera-controls">
+                    <button id="btn-switch-camera" class="btn-ctrl" title="Alternar Câmera">
+                        <svg viewBox="0 0 24 24" width="24" height="24">
+                            <path fill="currentColor" d="M19 8l-4 4h3c0 3.31-2.69 6-6 6c-1.01 0-1.97-.25-2.8-.7l-1.46 1.46C8.97 19.54 10.43 20 12 20c4.42 0 8-3.58 8-8h3l-4-4zM6 12c0-3.31 2.69-6 6-6c1.01 0 1.97.25 2.8.7l1.46-1.46C15.03 4.46 13.57 4 12 4c-4.42 0-8 3.58-8 8H1l4 4l4-4H6z"/>
+                        </svg>
+                    </button>
+                    <button id="btn-fullscreen" class="btn-ctrl" title="Tela Cheia">
+                        <svg viewBox="0 0 24 24" width="24" height="24">
+                            <path fill="currentColor" d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+                        </svg>
+                    </button>
+                    <button id="btn-config" class="btn-ctrl" title="Configurar API">
+                        <svg viewBox="0 0 24 24" width="24" height="24">
+                            <path fill="currentColor" d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/>
+                        </svg>
+                    </button>
+                </div>
+            </section>
+
+            <aside class="telemetry-panel">
+                <div class="status-grid">
+                    <div class="status-card" id="status-cam">
+                        <span class="label">HARDWARE CÂMERA</span>
+                        <span class="value state-offline">DESCONECTADO</span>
+                    </div>
+                    <div class="status-card" id="status-api">
+                        <span class="label">CONEXÃO API</span>
+                        <span class="value state-offline">OFFLINE</span>
+                    </div>
+                </div>
+
+                <div class="metrics-section">
+                    <h3>MONITORAMENTO DE RISCO</h3>
+                    <div class="metric-row">
+                        <span>Status de Segurança:</span>
+                        <span id="metric-safety-status" class="metric-val state-online" style="font-weight: bold;">SEGURO</span>
+                    </div>
+                    <div class="metric-row">
+                        <span>Objetos na Cena:</span>
+                        <span id="metric-count" class="metric-val">0</span>
+                    </div>
+                    <div class="metric-row">
+                        <span>Última Análise:</span>
+                        <span id="metric-time" class="metric-val">--:--:--</span>
+                    </div>
+                    <div class="metric-row">
+                        <span>Latência da API:</span>
+                        <span id="metric-latency" class="metric-val">0ms</span>
+                    </div>
+                </div>
+
+                <div class="detections-log">
+                    <h3>LOG DE INSPEÇÃO (EPI)</h3>
+                    <div class="log-container" id="log-container">
+                        <div class="log-placeholder">Aguardando telemetria em tempo real...</div>
+                    </div>
+                </div>
+            </aside>
+        </main>
+
+        <div id="config-modal" class="modal">
+            <div class="modal-content">
+                <h2>Configuração de Acesso Roboflow</h2>
+                <p class="modal-instruction">As chaves são armazenadas localmente no seu navegador e não são expostas publicamente.</p>
+                <div class="input-group">
+                    <label for="cfg-api-key">Roboflow Private API Key:</label>
+                    <input type="password" id="cfg-api-key" placeholder="Insira sua rf_xxxxxxxxxxxx">
+                </div>
+                <div class="input-group">
+                    <label for="cfg-model-id">Model ID (URL Slug):</label>
+                    <input type="text" id="cfg-model-id" placeholder="ex: ppe-detection-qlq3d">
+                </div>
+                <div class="input-group">
+                    <label for="cfg-model-ver">Model Version:</label>
+                    <input type="number" id="cfg-model-ver" placeholder="ex: 1" value="1">
+                </div>
+                <div class="modal-actions">
+                    <button id="btn-save-config" class="btn-primary">Salvar Configurações</button>
+                    <button id="btn-close-config" class="btn-secondary">Cancelar</button>
+                </div>
+            </div>
+        </div>
+
+        <footer class="system-footer">
+            <div class="footer-brand">EDCELLTECH</div>
+        </footer>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
