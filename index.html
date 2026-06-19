@@ -4,126 +4,185 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>EDCELLTECH - CFTV PPE Safety Analytics</title>
-    <link rel="stylesheet" href="style.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background-color: #ffffff;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: #ffffff;
+            z-index: 999999; /* Garante que ficará acima de absolutamente tudo */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            overflow: hidden;
+            opacity: 1;
+            transition: opacity 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+.splash-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 30px;         
+    text-align: center;
+    width: 90%;
+    max-width: 500px;  
+}
+
+.magic-eye {
+    width: 200px;    
+    height: auto;
+    overflow: visible;
+}
+
+        .eye-contour {
+            fill: none;
+            stroke: #1a1a1a;
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-dasharray: 300;
+            stroke-dashoffset: 300;
+            animation: drawContour 2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        .eye-iris {
+            fill: #0077ff; 
+            opacity: 0;
+            transform: scale(0);
+            transform-origin: center;
+            animation: fadeInIris 1.5s 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards, pulseIris 3s 2.5s infinite ease-in-out;
+            filter: drop-shadow(0 0 4px rgba(0, 119, 255, 0.6));
+        }
+
+        .eye-pupil {
+            fill: #1a1a1a;
+            opacity: 0;
+            transform: scale(0);
+            transform-origin: center;
+            animation: fadeInIris 1.2s 1.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        .eye-glow {
+            fill: #ffffff;
+            opacity: 0;
+            animation: fadeIn 1s 2s forwards;
+        }
+
+
+        .scan-line {
+            stroke: #00d2ff;
+            stroke-width: 2;
+            opacity: 0;
+            filter: drop-shadow(0 0 6px #00d2ff);
+            transform-origin: center;
+       
+            animation: scanEffect 1.5s 4.5s ease-in-out forwards;
+        }
+
+     
+.vision-text {
+    font-size: 20px;   
+    font-weight: 400;
+    letter-spacing: 10px; 
+    text-transform: uppercase;
+    color: #1a1a1a;
+    margin: 0;
+    padding-left: 10px; 
+    opacity: 0;
+    transform: translateY(10px);
+    filter: blur(4px);
+    animation: textReveal 2s 2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+     
+        @keyframes drawContour {
+            to { stroke-dashoffset: 0; }
+        }
+
+        @keyframes fadeInIris {
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        @keyframes pulseIris {
+            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 4px rgba(0, 119, 255, 0.6)); }
+            50% { transform: scale(1.05); filter: drop-shadow(0 0 12px rgba(0, 119, 255, 0.9)); }
+        }
+
+        
+        @keyframes scanEffect {
+            0% { opacity: 0; transform: translateY(-15px); }
+            15% { opacity: 1; }
+            50% { transform: translateY(15px); }
+            85% { opacity: 1; }
+            100% { opacity: 0; transform: translateY(-15px); }
+        }
+
+        @keyframes textReveal {
+            to {
+                opacity: 0.8;
+                transform: translateY(0);
+                filter: blur(0);
+            }
+        }
+
+        
+        .fade-out-splash {
+            opacity: 0 !important;
+            pointer-events: none;
+        }
+    </style>
 </head>
 <body>
-    <div class="app-container">
-        <header class="system-header">
-            <div class="logo-area">
-                <span class="pulse-icon" id="system-pulse"></span>
-                <h1>CFTV VISION <span class="accent">SAFETY PPE</span></h1>
-            </div>
-            <div class="system-time" id="live-clock">00:00:00</div>
-        </header>
 
-        <main class="main-content">
-            <section class="video-workspace" id="video-workspace">
-                <div class="video-wrapper" id="video-wrapper-element">
-                    <video id="webcam" autoplay playsinline muted></video>
-                    <canvas id="analytics-canvas"></canvas>
-                    
-                    <div class="cam-overlay-info">
-                        <div class="cam-id">CAM_PPE // SEGURANÇA DO TRABALHO</div>
-                        <div class="cam-fps" id="fps-counter">FPS: 00</div>
-                    </div>
-
-                    <div class="violation-alert-banner" id="violation-banner">
-    ALERTA: ÓCULOS DE SEGURANÇA NÃO DETECTADO
-</div>
-
-                    <div class="processing-overlay" id="processing-overlay">
-                        <div class="spinner"></div>
-                        <span>ANALISANDO...</span>
-                    </div>
-                </div>
-
-                <div class="camera-controls">
-                    <button id="btn-switch-camera" class="btn-ctrl" title="Alternar Câmera">
-                        <svg viewBox="0 0 24 24" width="24" height="24">
-                            <path fill="currentColor" d="M19 8l-4 4h3c0 3.31-2.69 6-6 6c-1.01 0-1.97-.25-2.8-.7l-1.46 1.46C8.97 19.54 10.43 20 12 20c4.42 0 8-3.58 8-8h3l-4-4zM6 12c0-3.31 2.69-6 6-6c1.01 0 1.97.25 2.8.7l1.46-1.46C15.03 4.46 13.57 4 12 4c-4.42 0-8 3.58-8 8H1l4 4l4-4H6z"/>
-                        </svg>
-                    </button>
-                    <button id="btn-fullscreen" class="btn-ctrl" title="Tela Cheia">
-                        <svg viewBox="0 0 24 24" width="24" height="24">
-                            <path fill="currentColor" d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
-                        </svg>
-                    </button>
-                    <button id="btn-config" class="btn-ctrl" title="Configurar API">
-                        <svg viewBox="0 0 24 24" width="24" height="24">
-                            <path fill="currentColor" d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/>
-                        </svg>
-                    </button>
-                </div>
-            </section>
-
-            <aside class="telemetry-panel">
-                <div class="status-grid">
-                    <div class="status-card" id="status-cam">
-                        <span class="label">HARDWARE CÂMERA</span>
-                        <span class="value state-offline">DESCONECTADO</span>
-                    </div>
-                    <div class="status-card" id="status-api">
-                        <span class="label">CONEXÃO API</span>
-                        <span class="value state-offline">OFFLINE</span>
-                    </div>
-                </div>
-
-                <div class="metrics-section">
-                    <h3>MONITORAMENTO DE RISCO</h3>
-                    <div class="metric-row">
-                        <span>Status de Segurança:</span>
-                        <span id="metric-safety-status" class="metric-val state-online" style="font-weight: bold;">SEGURO</span>
-                    </div>
-                    <div class="metric-row">
-                        <span>Objetos na Cena:</span>
-                        <span id="metric-count" class="metric-val">0</span>
-                    </div>
-                    <div class="metric-row">
-                        <span>Última Análise:</span>
-                        <span id="metric-time" class="metric-val">--:--:--</span>
-                    </div>
-                    <div class="metric-row">
-                        <span>Latência da API:</span>
-                        <span id="metric-latency" class="metric-val">0ms</span>
-                    </div>
-                </div>
-
-                <div class="detections-log">
-                    <h3>LOG DE INSPEÇÃO (EPI)</h3>
-                    <div class="log-container" id="log-container">
-                        <div class="log-placeholder">Aguardando telemetria em tempo real...</div>
-                    </div>
-                </div>
-            </aside>
-        </main>
-
-        <div id="config-modal" class="modal">
-            <div class="modal-content">
-                <h2>Configuração de Acesso Roboflow</h2>
-                <p class="modal-instruction">As chaves são armazenadas localmente no seu navegador e não são expostas publicamente.</p>
-                <div class="input-group">
-                    <label for="cfg-api-key">Roboflow Private API Key:</label>
-                    <input type="password" id="cfg-api-key" placeholder="Insira sua rf_xxxxxxxxxxxx">
-                </div>
-                <div class="input-group">
-                    <label for="cfg-model-id">Model ID (URL Slug):</label>
-                    <input type="text" id="cfg-model-id" placeholder="ex: ppe-detection-qlq3d">
-                </div>
-                <div class="input-group">
-                    <label for="cfg-model-ver">Model Version:</label>
-                    <input type="number" id="cfg-model-ver" placeholder="ex: 1" value="1">
-                </div>
-                <div class="modal-actions">
-                    <button id="btn-save-config" class="btn-primary">Salvar Configurações</button>
-                    <button id="btn-close-config" class="btn-secondary">Cancelar</button>
-                </div>
-            </div>
+    <div id="splash-screen">
+        <div class="splash-content">
+            <svg class="magic-eye" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <path class="eye-contour" d="M10,50 Q50,15 90,50 Q50,85 10,50 Z" />
+                <circle class="eye-iris" cx="50" cy="50" r="18" />
+                <circle class="eye-pupil" cx="50" cy="50" r="8" />
+                <circle class="eye-glow" cx="45" cy="45" r="3" />
+                <line class="scan-line" x1="10" y1="50" x2="90" y2="50" />
+            </svg>
+            <h1 class="vision-text">Vision</h1>
         </div>
-
-        <footer class="system-footer">
-            <div class="footer-brand">EDCELLTECH</div>
-        </footer>
     </div>
-    <script src="script.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            
+            setTimeout(function() {
+                const splash = document.getElementById('splash-screen');
+                if(splash) {
+                    splash.classList.add('fade-out-splash');
+                }
+            }, 6000);
+
+            
+            setTimeout(function() {
+                window.location.href = "Program/index.html";
+            }, 7000);
+        });
+    </script>
 </body>
 </html>
