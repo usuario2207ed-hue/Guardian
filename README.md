@@ -1,6 +1,6 @@
 ### 🚀 Como usar
 1. Acesse o app neste link:  
-   👉 https://usuario2207ed-hue.github.io/Paint-Shop-Predictive/
+   👉 https://usuario2207ed-hue.github.io/Guardian/
 
 2. No navegador do **celular (Chrome/Edge)**:  
    - Abra o menu (⋮)  
