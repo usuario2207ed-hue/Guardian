@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>EDCELLTECH - CFTV PPE Safety Analytics</title>
+    <title>CFTV PPE Safety Analytics</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#ffffff">
+    
     <style>
         * {
             margin: 0;
@@ -35,22 +38,22 @@
             transition: opacity 1s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-.splash-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 30px;         
-    text-align: center;
-    width: 90%;
-    max-width: 500px;  
-}
+        .splash-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;         
+            text-align: center;
+            width: 90%;
+            max-width: 500px;  
+        }
 
-.magic-eye {
-    width: 200px;    
-    height: auto;
-    overflow: visible;
-}
+        .magic-eye {
+            width: 200px;    
+            height: auto;
+            overflow: visible;
+        }
 
         .eye-contour {
             fill: none;
@@ -85,33 +88,29 @@
             animation: fadeIn 1s 2s forwards;
         }
 
-
         .scan-line {
             stroke: #00d2ff;
             stroke-width: 2;
             opacity: 0;
             filter: drop-shadow(0 0 6px #00d2ff);
             transform-origin: center;
-       
             animation: scanEffect 1.5s 4.5s ease-in-out forwards;
         }
 
-     
-.vision-text {
-    font-size: 20px;   
-    font-weight: 400;
-    letter-spacing: 10px; 
-    text-transform: uppercase;
-    color: #1a1a1a;
-    margin: 0;
-    padding-left: 10px; 
-    opacity: 0;
-    transform: translateY(10px);
-    filter: blur(4px);
-    animation: textReveal 2s 2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-}
+        .vision-text {
+            font-size: 20px;   
+            font-weight: 400;
+            letter-spacing: 10px; 
+            text-transform: uppercase;
+            color: #1a1a1a;
+            margin: 0;
+            padding-left: 10px; 
+            opacity: 0;
+            transform: translateY(10px);
+            filter: blur(4px);
+            animation: textReveal 2s 2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
 
-     
         @keyframes drawContour {
             to { stroke-dashoffset: 0; }
         }
@@ -129,7 +128,6 @@
             50% { transform: scale(1.05); filter: drop-shadow(0 0 12px rgba(0, 119, 255, 0.9)); }
         }
 
-        
         @keyframes scanEffect {
             0% { opacity: 0; transform: translateY(-15px); }
             15% { opacity: 1; }
@@ -146,7 +144,6 @@
             }
         }
 
-        
         .fade-out-splash {
             opacity: 0 !important;
             pointer-events: none;
@@ -164,7 +161,7 @@
                 <circle class="eye-glow" cx="45" cy="45" r="3" />
                 <line class="scan-line" x1="10" y1="50" x2="90" y2="50" />
             </svg>
-            <h1 class="vision-text">Vision</h1>
+            <h1 class="vision-text">GUARDIAN</h1>
         </div>
     </div>
 
@@ -178,11 +175,19 @@
                 }
             }, 6000);
 
-            
             setTimeout(function() {
                 window.location.href = "Program/index.html";
             }, 7000);
         });
+
+       
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('Service Worker registrado com sucesso:', reg.scope))
+                .catch(err => console.log('Falha ao registrar o Service Worker:', err));
+            });
+        }
     </script>
 </body>
 </html>
