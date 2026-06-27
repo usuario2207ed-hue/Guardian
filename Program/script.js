@@ -1,4 +1,3 @@
-
 window.addEventListener('load', function() {
 
     
@@ -59,6 +58,8 @@ window.addEventListener('load', function() {
         isAlarmPlaying: false,
         consecutiveFailures: 0,
         smoothedBox: null,
+        violationStartTime: null,         // Timestamp de quando o alerta contínuo começou
+        evidenceCapturedThisCycle: false,  // Trava para evitar múltiplas capturas na mesma infração
         apiConfig: {
             apiKey: localStorage.getItem('rf_apiKey') || '',
             modelId: localStorage.getItem('rf_modelId') || '',
@@ -86,6 +87,7 @@ window.addEventListener('load', function() {
         metricTime: document.getElementById('metric-time'),
         metricLatency: document.getElementById('metric-latency'),
         logContainer: document.getElementById('log-container'),
+        toggleAutoCapture: document.getElementById('toggle-auto-capture'), // Elemento do switch
         
         modal: document.getElementById('config-modal'),
         btnSaveConfig: document.getElementById('btn-save-config'),
@@ -261,6 +263,37 @@ window.addEventListener('load', function() {
         return await response.json();
     }
 
+    // Gerador de evidência fotográfica mesclando o frame real da webcam com os overlays desenhados no canvas
+    function triggerEvidenceCapture() {
+        const captureCanvas = document.createElement('canvas');
+        captureCanvas.width = elements.canvas.width;
+        captureCanvas.height = elements.canvas.height;
+        const captureCtx = captureCanvas.getContext('2d');
+
+        // 1. Desenha o frame de vídeo atual da webcam
+        captureCtx.drawImage(elements.webcam, 0, 0, captureCanvas.width, captureCanvas.height);
+        // 2. Desenha o canvas analítico com as caixas de delimitação vermelhas ( bounding boxes )
+        captureCtx.drawImage(elements.canvas, 0, 0, captureCanvas.width, captureCanvas.height);
+
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const seconds = String(now.getSeconds()).padStart(2, '0');
+
+        const fileName = `evidencia-sem-oculos-${year}-${month}-${day}-${hours}-${minutes}-${seconds}.png`;
+        const dataUrl = captureCanvas.toDataURL('image/png');
+
+        const downloadLink = document.createElement('a');
+        downloadLink.href = dataUrl;
+        downloadLink.download = fileName;
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+    }
+
     function processPredictions(predictions, latency) {
         ctx.clearRect(0, 0, elements.canvas.width, elements.canvas.height);
         elements.metricLatency.textContent = `${latency}ms`;
@@ -274,6 +307,8 @@ window.addEventListener('load', function() {
         if (validPredictions.length === 0) {
             state.consecutiveFailures = 0;
             state.smoothedBox = null;
+            state.violationStartTime = null;          // Reseta timer de infração
+            state.evidenceCapturedThisCycle = false;   // Permite captura em novos ciclos
             stopAlarm(); 
 
             elements.videoWrapper.classList.remove('danger-frame');
@@ -319,6 +354,8 @@ window.addEventListener('load', function() {
 
         if (glassesDetected) {
             state.consecutiveFailures = 0;
+            state.violationStartTime = null;          // Reseta timer de infração pois a condição é segura
+            state.evidenceCapturedThisCycle = false;   // Reseta trava de captura
             stopAlarm();
 
             elements.videoWrapper.classList.remove('danger-frame');
@@ -386,6 +423,22 @@ window.addEventListener('load', function() {
                 ctx.font = "bold 32px Arial";
                 ctx.fillStyle = "#ff3333";
                 ctx.fillText("SEM ÓCULOS", 30, 50);
+
+                // --- LÓGICA DE CAPTURA AUTOMÁTICA DE EVIDÊNCIA ---
+                // Caso o início da violação contínua não tenha sido marcado, registra o timestamp atual
+                if (state.violationStartTime === null) {
+                    state.violationStartTime = Date.now();
+                }
+
+                // Verifica se o Switch está ativo E se o alerta contínuo já completou 4 segundos (4000ms)
+                if (elements.toggleAutoCapture && elements.toggleAutoCapture.checked) {
+                    const elapsedViolationTime = Date.now() - state.violationStartTime;
+                    
+                    if (elapsedViolationTime >= 4000 && !state.evidenceCapturedThisCycle) {
+                        triggerEvidenceCapture();
+                        state.evidenceCapturedThisCycle = true; // Trava o gatilho para não duplicar capturas no mesmo ciclo
+                    }
+                }
             }
         }
     }
@@ -542,5 +595,15 @@ function toggleFullscreen() {
         elements.btnConfig.addEventListener('click', openConfigModal);
         elements.btnCloseConfig.addEventListener('click', closeConfigModal);
         elements.btnSaveConfig.addEventListener('click', saveConfig);
+        
+        // Garante reset das travas caso o usuário desligue a chave no meio de uma infração
+        if (elements.toggleAutoCapture) {
+            elements.toggleAutoCapture.addEventListener('change', function() {
+                if (!this.checked) {
+                    state.violationStartTime = null;
+                    state.evidenceCapturedThisCycle = false;
+                }
+            });
+        }
     }
 })();
